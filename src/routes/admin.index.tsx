@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2, LogOut, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { booksQuery, settingsQuery, formatPrice, uploadImage, type Book } from "@/lib/books";
+import { booksQuery, settingsQuery, formatPrice, uploadImage, type Book, type Settings } from "@/lib/books";
 import { BookCover } from "@/components/BookCover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,7 +87,7 @@ function AdminPage() {
   );
 }
 
-function ImagePicker({ value, onChange, label }: { value?: string | null; onChange: (u: string) => void; label: string }) {
+function ImagePicker({ value, onChange, label }: { value?: string | null | undefined; onChange: (u: string) => void; label: string }) {
   const [busy, setBusy] = useState(false);
   return (
     <div>
@@ -126,7 +126,7 @@ function BooksPanel() {
   const set = (k: keyof Book, v: unknown) => setDraft((d) => ({ ...d, [k]: v }));
 
   async function save() {
-    if (!draft?.title) return toast.error("Title is required");
+    if (!draft?.title) { toast.error("Title is required"); return; }
     setSaving(true);
     const payload = {
       title: draft.title,
@@ -146,7 +146,7 @@ function BooksPanel() {
       ? await supabase.from("books").update(payload).eq("id", draft.id)
       : await supabase.from("books").insert(payload);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved");
     setDraft(null);
     qc.invalidateQueries();
@@ -155,7 +155,7 @@ function BooksPanel() {
   async function remove(b: Book) {
     if (!confirm(`Delete "${b.title}"?`)) return;
     const { error } = await supabase.from("books").delete().eq("id", b.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Deleted");
     qc.invalidateQueries();
   }
@@ -229,7 +229,7 @@ function BooksPanel() {
 function SettingsPanel() {
   const qc = useQueryClient();
   const { data } = useQuery(settingsQuery);
-  const [s, setS] = useState(data);
+  const [s, setS] = useState<Settings | null | undefined>(data);
   useEffect(() => setS(data), [data]);
   if (!s) return null;
 
@@ -241,7 +241,7 @@ function SettingsPanel() {
       contact_email: s!.contact_email,
       whatsapp: s!.whatsapp,
     }).eq("id", 1);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Settings saved");
     qc.invalidateQueries();
   }
