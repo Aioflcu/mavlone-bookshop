@@ -14,16 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          author: string
+          category: string
+          cover_url: string | null
+          created_at: string
+          description: string
+          featured: boolean
+          format: string
+          id: string
+          old_price: number | null
+          pages: number | null
+          price: number
+          published: boolean
+          purchase_url: string | null
+          title: string
+        }
+        Insert: {
+          author?: string
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string
+          featured?: boolean
+          format?: string
+          id?: string
+          old_price?: number | null
+          pages?: number | null
+          price?: number
+          published?: boolean
+          purchase_url?: string | null
+          title: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string
+          featured?: boolean
+          format?: string
+          id?: string
+          old_price?: number | null
+          pages?: number | null
+          price?: number
+          published?: boolean
+          purchase_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          contact_email: string | null
+          hero_image_url: string | null
+          hero_subtitle: string
+          hero_title: string
+          id: number
+          whatsapp: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          id?: number
+          whatsapp?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          id?: number
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +251,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
