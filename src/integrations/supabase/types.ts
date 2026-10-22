@@ -29,6 +29,8 @@ export type Database = {
           price: number
           published: boolean
           purchase_url: string | null
+          rating: number | null
+          rating_count: number | null
           title: string
         }
         Insert: {
@@ -45,6 +47,8 @@ export type Database = {
           price?: number
           published?: boolean
           purchase_url?: string | null
+          rating?: number | null
+          rating_count?: number | null
           title: string
         }
         Update: {
@@ -61,6 +65,8 @@ export type Database = {
           price?: number
           published?: boolean
           purchase_url?: string | null
+          rating?: number | null
+          rating_count?: number | null
           title?: string
         }
         Relationships: []

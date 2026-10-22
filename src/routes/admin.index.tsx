@@ -139,6 +139,8 @@ function BooksPanel() {
       cover_url: draft.cover_url ?? null,
       purchase_url: draft.purchase_url || null,
       pages: draft.pages ? Number(draft.pages) : null,
+      rating: draft.rating ? Number(draft.rating) : null,
+      rating_count: draft.rating_count ? Number(draft.rating_count) : null,
       featured: !!draft.featured,
       published: draft.published ?? true,
     };
@@ -210,6 +212,16 @@ function BooksPanel() {
                 <div><Label>Price</Label><Input type="number" step="0.01" value={draft.price ?? ""} onChange={(e) => set("price", e.target.value)} /></div>
                 <div><Label>Old price</Label><Input type="number" step="0.01" value={draft.old_price ?? ""} onChange={(e) => set("old_price", e.target.value)} /></div>
                 <div><Label>Pages</Label><Input type="number" value={draft.pages ?? ""} onChange={(e) => set("pages", e.target.value)} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Rating (0–5)</Label>
+                  <Input type="number" step="0.1" min="0" max="5" placeholder="e.g. 4.8" value={draft.rating ?? ""} onChange={(e) => set("rating", e.target.value)} />
+                </div>
+                <div>
+                  <Label>Number of reviews</Label>
+                  <Input type="number" min="0" placeholder="e.g. 128" value={draft.rating_count ?? ""} onChange={(e) => set("rating_count", e.target.value)} />
+                </div>
               </div>
               <div><Label>Description</Label><Textarea rows={5} value={draft.description ?? ""} onChange={(e) => set("description", e.target.value)} /></div>
               <div><Label>Buy link (optional)</Label><Input placeholder="https://…" value={draft.purchase_url ?? ""} onChange={(e) => set("purchase_url", e.target.value)} /></div>

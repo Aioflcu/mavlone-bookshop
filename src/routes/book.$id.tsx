@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { bookQuery, settingsQuery, formatPrice } from "@/lib/books";
 import { BookCover } from "@/components/BookCover";
+import { Stars } from "@/components/Stars";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/book/$id")({
@@ -52,6 +53,7 @@ function BookPage() {
               </span>
               <h1 className="mt-2 text-4xl leading-tight sm:text-5xl">{book.title}</h1>
               <p className="mt-2 text-lg text-muted-foreground">by {book.author}</p>
+              <Stars rating={book.rating} count={book.rating_count} className="mt-3" />
               <p className="mt-6 text-2xl font-semibold text-primary">
                 {formatPrice(book.price)}
                 {book.old_price && (

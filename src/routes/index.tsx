@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
-import { booksQuery, settingsQuery, formatPrice } from "@/lib/books";
+import { booksQuery, settingsQuery, formatPrice, type Book } from "@/lib/books";
 import { BookCover } from "@/components/BookCover";
+import { Stars } from "@/components/Stars";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { Input } from "@/components/ui/input";
 
@@ -22,20 +23,89 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+const FORMAT_LABELS: Record<string, string> = {
+  ebook: "Ebooks",
+  paperback: "Paperbacks",
+  audiobook: "Audiobooks",
+};
+
+function NewReleases({ books }: { books: Book[] }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const scroll = (dir: number) =>
+    rowRef.current?.scrollBy({ left: dir * 260, behavior: "smooth" });
+
+  return (
+    <section className="mx-auto max-w-6xl px-5 pt-16">
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="text-3xl">New releases</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Fresh picks readers buy first.</p>
+        </div>
+        <div className="hidden gap-2 sm:flex">
+          <button
+            aria-label="Scroll back"
+            onClick={() => scroll(-1)}
+            className="rounded-full border bg-card p-2 transition hover:bg-secondary"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            aria-label="Scroll forward"
+            onClick={() => scroll(1)}
+            className="rounded-full border bg-card p-2 transition hover:bg-secondary"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div
+        ref={rowRef}
+        className="mt-6 flex snap-x gap-5 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {books.map((b) => (
+          <Link
+            key={b.id}
+            to="/book/$id"
+            params={{ id: b.id }}
+            className="group w-40 shrink-0 snap-start sm:w-44"
+          >
+            <div className="transition group-hover:-translate-y-1"><BookCover book={b} /></div>
+            <p className="mt-3 truncate font-display text-sm leading-snug">{b.title}</p>
+            <Stars rating={b.rating} count={b.rating_count} className="mt-1" />
+            <p className="mt-1 text-sm">
+              <span className="font-semibold text-primary">{formatPrice(b.price)}</span>
+              {b.old_price && (
+                <span className="ml-2 text-muted-foreground line-through">{formatPrice(b.old_price)}</span>
+              )}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Index() {
   const { data: books = [], isLoading } = useQuery(booksQuery);
   const { data: settings } = useQuery(settingsQuery);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
+  const [fmt, setFmt] = useState<string>("all");
 
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(books.map((b) => b.category)))],
     [books],
   );
+  const formats = useMemo(
+    () => Array.from(new Set(books.map((b) => b.format))).filter((f) => FORMAT_LABELS[f]),
+    [books],
+  );
   const featured = books.filter((b) => b.featured).slice(0, 3);
+  const newReleases = books.slice(0, 10);
   const filtered = books.filter(
     (b) =>
       (cat === "All" || b.category === cat) &&
+      (fmt === "all" || b.format === fmt) &&
       (b.title + b.author).toLowerCase().includes(q.toLowerCase()),
   );
 
@@ -69,6 +139,8 @@ function Index() {
         </div>
       </section>
 
+      {newReleases.length > 0 && <NewReleases books={newReleases} />}
+
       {featured.length > 0 && (
         <section className="mx-auto max-w-6xl px-5 pt-16">
           <h2 className="text-3xl">Featured this week</h2>
@@ -85,6 +157,7 @@ function Index() {
                   <span className="text-xs uppercase tracking-wider text-muted-foreground">{b.category}</span>
                   <span className="mt-1 font-display text-lg leading-snug">{b.title}</span>
                   <span className="text-sm text-muted-foreground">{b.author}</span>
+                  <Stars rating={b.rating} count={b.rating_count} className="mt-1" />
                   <span className="mt-auto font-semibold text-primary">{formatPrice(b.price)}</span>
                 </div>
               </Link>
@@ -101,7 +174,32 @@ function Index() {
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title or author" className="pl-9" />
           </div>
         </div>
-        <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
+
+        {formats.length > 0 && (
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button
+              onClick={() => setFmt("all")}
+              className={`rounded-full border px-4 py-1.5 text-sm transition ${
+                fmt === "all" ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-secondary"
+              }`}
+            >
+              All formats
+            </button>
+            {formats.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFmt(f)}
+                className={`rounded-full border px-4 py-1.5 text-sm transition ${
+                  fmt === f ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-secondary"
+                }`}
+              >
+                {FORMAT_LABELS[f]}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
           {categories.map((c) => (
             <button
               key={c}
@@ -126,6 +224,7 @@ function Index() {
                 <div className="transition group-hover:-translate-y-1"><BookCover book={b} /></div>
                 <p className="mt-3 font-display text-base leading-snug">{b.title}</p>
                 <p className="text-sm text-muted-foreground">{b.author}</p>
+                <Stars rating={b.rating} count={b.rating_count} className="mt-1" />
                 <p className="mt-1 text-sm">
                   <span className="font-semibold text-primary">{formatPrice(b.price)}</span>
                   {b.old_price && (
