@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { bookQuery, settingsQuery, formatPrice } from "@/lib/books";
+import { bookQuery, settingsQuery, formatPrice, buyHrefFor } from "@/lib/books";
 import { BookCover } from "@/components/BookCover";
 import { Stars } from "@/components/Stars";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
