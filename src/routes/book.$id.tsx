@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { bookQuery, settingsQuery, formatPrice } from "@/lib/books";
+import { bookQuery, settingsQuery, formatPrice, buyHrefFor } from "@/lib/books";
 import { BookCover } from "@/components/BookCover";
 import { Stars } from "@/components/Stars";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
@@ -25,13 +25,7 @@ function BookPage() {
   const { data: book, isLoading } = useQuery(bookQuery(id));
   const { data: settings } = useQuery(settingsQuery);
 
-  const buyHref =
-    book?.purchase_url ||
-    (settings?.whatsapp
-      ? `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi, I want to buy "${book?.title}"`)}`
-      : settings?.contact_email
-        ? `mailto:${settings.contact_email}?subject=${encodeURIComponent(`Order: ${book?.title}`)}`
-        : undefined);
+  const buyHref = book ? buyHrefFor(book, settings) : undefined;
 
   return (
     <div className="min-h-screen">

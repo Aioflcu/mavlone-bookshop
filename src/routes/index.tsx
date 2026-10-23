@@ -1,15 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { z } from "zod";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Search, ShoppingBag } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
-import { booksQuery, settingsQuery, formatPrice, type Book } from "@/lib/books";
+import {
+  booksQuery,
+  settingsQuery,
+  formatPrice,
+  buyHrefFor,
+  type Book,
+  type Settings,
+} from "@/lib/books";
 import { BookCover } from "@/components/BookCover";
 import { Stars } from "@/components/Stars";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/")({
+  validateSearch: z.object({ q: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "mavlonebook — Ebooks & Paperbacks" },
@@ -29,68 +38,152 @@ const FORMAT_LABELS: Record<string, string> = {
   audiobook: "Audiobooks",
 };
 
-function NewReleases({ books }: { books: Book[] }) {
+function BookCard({
+  book,
+  buyHref,
+  className = "",
+}: {
+  book: Book;
+  buyHref?: string | undefined;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`group relative flex flex-col rounded-2xl border bg-background p-3 transition duration-300 hover:-translate-y-1 hover:shadow-card ${className}`}
+    >
+      <Link
+        to="/book/$id"
+        params={{ id: book.id }}
+        className="absolute inset-0 z-10 rounded-2xl"
+        aria-label={book.title}
+      />
+      <div className="pointer-events-none">
+        <BookCover book={book} />
+        <p className="mt-3 truncate text-sm font-semibold">{book.title}</p>
+        <Stars rating={book.rating} count={book.rating_count} className="mt-1" />
+      </div>
+      <div className="relative z-20 mt-auto flex items-center justify-between pt-2">
+        <p className="pointer-events-none text-sm">
+          <span className="font-bold">{formatPrice(book.price)}</span>
+          {book.old_price && (
+            <span className="ml-1.5 text-xs text-muted-foreground line-through">
+              {formatPrice(book.old_price)}
+            </span>
+          )}
+        </p>
+        {buyHref && (
+          <a
+            href={buyHref}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Buy ${book.title}`}
+            className="rounded-lg border bg-card p-2 text-muted-foreground transition hover:bg-primary hover:text-primary-foreground"
+          >
+            <ShoppingBag className="h-4 w-4" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CarouselShelf({
+  title,
+  subtitle,
+  books,
+  settings,
+}: {
+  title: string;
+  subtitle: string;
+  books: Book[];
+  settings?: Settings | null | undefined;
+}) {
   const rowRef = useRef<HTMLDivElement>(null);
-  const scroll = (dir: number) =>
-    rowRef.current?.scrollBy({ left: dir * 260, behavior: "smooth" });
+  if (books.length === 0) return null;
+  const scroll = (dir: number) => rowRef.current?.scrollBy({ left: dir * 300, behavior: "smooth" });
 
   return (
-    <section className="mx-auto max-w-6xl px-5 pt-16">
-      <div className="flex items-end justify-between">
+    <div className="mt-10">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl">New releases</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Fresh picks readers buy first.</p>
+          <h3 className="font-display text-xl sm:text-2xl">{title}</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <div className="hidden gap-2 sm:flex">
+        <div className="flex gap-2">
           <button
-            aria-label="Scroll back"
+            aria-label={`Scroll back — ${title}`}
             onClick={() => scroll(-1)}
-            className="rounded-full border bg-card p-2 transition hover:bg-secondary"
+            className="rounded-full border bg-background p-2 transition hover:bg-secondary"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
-            aria-label="Scroll forward"
+            aria-label={`Scroll forward — ${title}`}
             onClick={() => scroll(1)}
-            className="rounded-full border bg-card p-2 transition hover:bg-secondary"
+            className="rounded-full border bg-background p-2 transition hover:bg-secondary"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <div
-        ref={rowRef}
-        className="mt-6 flex snap-x gap-5 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
+      <div className="mt-5 flex snap-x gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {books.map((b) => (
-          <Link
+          <BookCard
             key={b.id}
-            to="/book/$id"
-            params={{ id: b.id }}
-            className="group w-40 shrink-0 snap-start sm:w-44"
-          >
-            <div className="transition group-hover:-translate-y-1"><BookCover book={b} /></div>
-            <p className="mt-3 truncate font-display text-sm leading-snug">{b.title}</p>
-            <Stars rating={b.rating} count={b.rating_count} className="mt-1" />
-            <p className="mt-1 text-sm">
-              <span className="font-semibold text-primary">{formatPrice(b.price)}</span>
-              {b.old_price && (
-                <span className="ml-2 text-muted-foreground line-through">{formatPrice(b.old_price)}</span>
-              )}
-            </p>
-          </Link>
+            book={b}
+            buyHref={buyHrefFor(b, settings)}
+            className="w-44 shrink-0 snap-start sm:w-48"
+          />
         ))}
       </div>
-    </section>
+    </div>
+  );
+}
+
+function CoverFan({ books, fallbackImage }: { books: Book[]; fallbackImage: string }) {
+  const covers = books.filter((b) => b.cover_url).slice(0, 5);
+  if (covers.length === 0) {
+    return (
+      <div className="relative mx-auto w-full max-w-md rotate-2">
+        <img src={fallbackImage} alt="" className="w-full rounded-2xl object-cover shadow-lift" />
+      </div>
+    );
+  }
+  const n = covers.length;
+  return (
+    <div className="relative mx-auto hidden h-[330px] w-full max-w-lg lg:block">
+      {covers.map((b, i) => {
+        const offset = i - (n - 1) / 2;
+        return (
+          <div
+            key={b.id}
+            className="absolute left-1/2 top-1/2 w-44"
+            style={{
+              transform: `translate(-50%, -50%) translateX(${offset * 58}px) translateY(${
+                Math.abs(offset) * 8
+              }px) rotate(${offset * 7}deg)`,
+              zIndex: 30 - Math.abs(offset) * 10,
+            }}
+          >
+            <BookCover book={b} />
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
 function Index() {
   const { data: books = [], isLoading } = useQuery(booksQuery);
   const { data: settings } = useQuery(settingsQuery);
-  const [q, setQ] = useState("");
+  const { q: qParam } = Route.useSearch();
+  const [q, setQ] = useState(qParam ?? "");
   const [cat, setCat] = useState("All");
   const [fmt, setFmt] = useState<string>("all");
+
+  useEffect(() => {
+    setQ(qParam ?? "");
+  }, [qParam]);
 
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(books.map((b) => b.category)))],
@@ -100,78 +193,117 @@ function Index() {
     () => Array.from(new Set(books.map((b) => b.format))).filter((f) => FORMAT_LABELS[f]),
     [books],
   );
-  const featured = books.filter((b) => b.featured).slice(0, 3);
-  const newReleases = books.slice(0, 10);
+  const newReleases = useMemo(() => books.slice(0, 10), [books]);
+  const featured = useMemo(() => books.filter((b) => b.featured).slice(0, 10), [books]);
+  const favorites = useMemo(
+    () =>
+      [...books]
+        .filter((b) => (b.rating ?? 0) > 0)
+        .sort(
+          (a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.rating_count ?? 0) - (a.rating_count ?? 0),
+        )
+        .slice(0, 10),
+    [books],
+  );
   const filtered = books.filter(
     (b) =>
       (cat === "All" || b.category === cat) &&
       (fmt === "all" || b.format === fmt) &&
       (b.title + b.author).toLowerCase().includes(q.toLowerCase()),
   );
+  const hasAudiobooks = books.some((b) => b.format === "audiobook");
 
   return (
     <div className="min-h-screen">
       <SiteHeader />
 
-      <section className="relative overflow-hidden bg-ink text-ink-foreground">
-        <img
-          src={settings?.hero_image_url || heroImg}
-          alt=""
-          width={1600}
-          height={1008}
-          className="absolute inset-0 h-full w-full object-cover opacity-60"
-        />
-        <div className="absolute inset-0 bg-ink-fade" />
-        <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-28 sm:pb-24 sm:pt-40">
-          <p className="mb-4 text-xs uppercase tracking-[0.3em] text-gold">The mavlonebook store</p>
-          <h1 className="max-w-2xl text-4xl font-medium leading-[1.05] sm:text-6xl">
-            {settings?.hero_title ?? "Books that stay with you."}
-          </h1>
-          <p className="mt-5 max-w-lg text-base opacity-80 sm:text-lg">
-            {settings?.hero_subtitle ?? "Handpicked ebooks and paperbacks, delivered instantly."}
-          </p>
-          <a
-            href="#store"
-            className="mt-8 inline-flex rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:opacity-90"
-          >
-            Browse the store
-          </a>
+      <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-5 sm:pt-8">
+        <div className="relative overflow-hidden rounded-3xl border bg-card px-6 py-12 shadow-card sm:px-12 sm:py-16">
+          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blob" />
+          <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-blob opacity-70" />
+          <div className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
+            <div>
+              <span className="inline-flex rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em]">
+                The mavlonebook bookstore
+              </span>
+              <h1 className="mt-5 max-w-xl font-display text-4xl font-semibold leading-[1.05] sm:text-6xl">
+                {settings?.hero_title ?? "Books that stay with you."}
+              </h1>
+              <p className="mt-5 max-w-md text-base text-muted-foreground sm:text-lg">
+                {settings?.hero_subtitle ?? "Handpicked ebooks and paperbacks, delivered instantly."}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a
+                  href="#store"
+                  className="rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                >
+                  Explore books
+                </a>
+                {hasAudiobooks && (
+                  <button
+                    onClick={() => {
+                      setFmt("audiobook");
+                      document
+                        .getElementById("store")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="rounded-full border bg-background px-7 py-3 text-sm font-semibold transition hover:bg-secondary"
+                  >
+                    Audiobooks
+                  </button>
+                )}
+              </div>
+            </div>
+            <CoverFan books={books} fallbackImage={settings?.hero_image_url || heroImg} />
+          </div>
         </div>
       </section>
 
-      {newReleases.length > 0 && <NewReleases books={newReleases} />}
-
-      {featured.length > 0 && (
-        <section className="mx-auto max-w-6xl px-5 pt-16">
-          <h2 className="text-3xl">Featured this week</h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {featured.map((b) => (
-              <Link
-                key={b.id}
-                to="/book/$id"
-                params={{ id: b.id }}
-                className="group flex gap-4 rounded-xl border bg-card p-4 transition hover:-translate-y-1"
-              >
-                <div className="w-24 shrink-0"><BookCover book={b} /></div>
-                <div className="flex flex-col">
-                  <span className="text-xs uppercase tracking-wider text-muted-foreground">{b.category}</span>
-                  <span className="mt-1 font-display text-lg leading-snug">{b.title}</span>
-                  <span className="text-sm text-muted-foreground">{b.author}</span>
-                  <Stars rating={b.rating} count={b.rating_count} className="mt-1" />
-                  <span className="mt-auto font-semibold text-primary">{formatPrice(b.price)}</span>
-                </div>
-              </Link>
-            ))}
+      <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-5 sm:pt-8">
+        <div className="rounded-3xl border bg-card p-6 shadow-card sm:p-10">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="font-display text-3xl sm:text-4xl">Featured</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Instant-download ebooks and reader favorites from the mavlonebook store.
+              </p>
+            </div>
+            <a href="#store" className="text-sm font-semibold text-primary hover:underline">
+              Explore our bookstore →
+            </a>
           </div>
-        </section>
-      )}
+          <CarouselShelf
+            title="New releases"
+            subtitle="Fresh picks readers buy first."
+            books={newReleases}
+            settings={settings}
+          />
+          <CarouselShelf
+            title="Staff picks"
+            subtitle="Hand-selected by the mavlonebook team."
+            books={featured}
+            settings={settings}
+          />
+          <CarouselShelf
+            title="Reader favorites"
+            subtitle="The highest-rated titles on the store."
+            books={favorites}
+            settings={settings}
+          />
+        </div>
+      </section>
 
-      <section id="store" className="mx-auto max-w-6xl scroll-mt-20 px-5 pt-20">
+      <section id="store" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-16 sm:px-5 sm:pt-20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-3xl">All books</h2>
+          <h2 className="font-display text-3xl">All books</h2>
           <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title or author" className="pl-9" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search title or author"
+              className="rounded-full pl-10"
+            />
           </div>
         </div>
 
@@ -180,7 +312,9 @@ function Index() {
             <button
               onClick={() => setFmt("all")}
               className={`rounded-full border px-4 py-1.5 text-sm transition ${
-                fmt === "all" ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-secondary"
+                fmt === "all"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "bg-card hover:bg-secondary"
               }`}
             >
               All formats
@@ -190,7 +324,9 @@ function Index() {
                 key={f}
                 onClick={() => setFmt(f)}
                 className={`rounded-full border px-4 py-1.5 text-sm transition ${
-                  fmt === f ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-secondary"
+                  fmt === f
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "bg-card hover:bg-secondary"
                 }`}
               >
                 {FORMAT_LABELS[f]}
@@ -205,7 +341,9 @@ function Index() {
               key={c}
               onClick={() => setCat(c)}
               className={`shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${
-                cat === c ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-secondary"
+                cat === c
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "bg-card hover:bg-secondary"
               }`}
             >
               {c}
@@ -220,18 +358,7 @@ function Index() {
         ) : (
           <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
             {filtered.map((b) => (
-              <Link key={b.id} to="/book/$id" params={{ id: b.id }} className="group">
-                <div className="transition group-hover:-translate-y-1"><BookCover book={b} /></div>
-                <p className="mt-3 font-display text-base leading-snug">{b.title}</p>
-                <p className="text-sm text-muted-foreground">{b.author}</p>
-                <Stars rating={b.rating} count={b.rating_count} className="mt-1" />
-                <p className="mt-1 text-sm">
-                  <span className="font-semibold text-primary">{formatPrice(b.price)}</span>
-                  {b.old_price && (
-                    <span className="ml-2 text-muted-foreground line-through">{formatPrice(b.old_price)}</span>
-                  )}
-                </p>
-              </Link>
+              <BookCard key={b.id} book={b} buyHref={buyHrefFor(b, settings)} />
             ))}
           </div>
         )}
