@@ -25,13 +25,7 @@ function BookPage() {
   const { data: book, isLoading } = useQuery(bookQuery(id));
   const { data: settings } = useQuery(settingsQuery);
 
-  const buyHref =
-    book?.purchase_url ||
-    (settings?.whatsapp
-      ? `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi, I want to buy "${book?.title}"`)}`
-      : settings?.contact_email
-        ? `mailto:${settings.contact_email}?subject=${encodeURIComponent(`Order: ${book?.title}`)}`
-        : undefined);
+  const buyHref = buyHrefFor(book, settings);
 
   return (
     <div className="min-h-screen">
