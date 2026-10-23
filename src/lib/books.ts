@@ -54,7 +54,7 @@ export async function uploadImage(file: File) {
 
 export function buyHrefFor(
   book: Pick<Book, "title" | "purchase_url">,
-  settings?: Settings | null,
+  settings?: Settings | null | undefined,
 ): string | undefined {
   if (book.purchase_url) return book.purchase_url;
   if (settings?.whatsapp) {

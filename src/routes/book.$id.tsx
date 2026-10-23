@@ -25,7 +25,7 @@ function BookPage() {
   const { data: book, isLoading } = useQuery(bookQuery(id));
   const { data: settings } = useQuery(settingsQuery);
 
-  const buyHref = buyHrefFor(book, settings);
+  const buyHref = book ? buyHrefFor(book, settings) : undefined;
 
   return (
     <div className="min-h-screen">

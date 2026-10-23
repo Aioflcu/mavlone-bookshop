@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Search, ShoppingBag } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
@@ -17,9 +18,7 @@ import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-  }),
+  validateSearch: z.object({ q: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "mavlonebook — Ebooks & Paperbacks" },
@@ -45,7 +44,7 @@ function BookCard({
   className = "",
 }: {
   book: Book;
-  buyHref?: string;
+  buyHref?: string | undefined;
   className?: string;
 }) {
   return (
@@ -97,7 +96,7 @@ function CarouselShelf({
   title: string;
   subtitle: string;
   books: Book[];
-  settings?: Settings | null;
+  settings?: Settings | null | undefined;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
   if (books.length === 0) return null;
