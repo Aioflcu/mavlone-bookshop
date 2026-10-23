@@ -178,7 +178,6 @@ function Index() {
   const { data: books = [], isLoading } = useQuery(booksQuery);
   const { data: settings } = useQuery(settingsQuery);
   const { q: qParam } = Route.useSearch();
-  const navigate = useNavigate();
   const [q, setQ] = useState(qParam ?? "");
   const [cat, setCat] = useState("All");
   const [fmt, setFmt] = useState<string>("all");
