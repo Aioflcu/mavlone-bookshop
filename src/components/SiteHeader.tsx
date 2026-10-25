@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { BookOpen, Search } from "lucide-react";
+import { BookOpen, Search, UserRound } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -19,25 +19,23 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-5">
-        <Link to="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-card">
-            <BookOpen className="h-5 w-5 text-primary-foreground" />
+      <div className="mx-auto flex h-18 max-w-7xl items-center gap-4 px-5">
+        <Link to="/" className="flex shrink-0 items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full border bg-card shadow-card">
+            <BookOpen className="h-5 w-5 text-primary" />
           </span>
           <span className="hidden flex-col leading-tight sm:flex">
-            <span className="font-display text-xl font-semibold">mavlonebook</span>
-            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Premium books &amp; guides
-            </span>
+            <span className="font-display text-lg font-extrabold">mavlonebook</span>
+            <span className="text-[10px] font-medium text-muted-foreground">Premium Books &amp; Guides</span>
           </span>
         </Link>
-        <form onSubmit={onSubmit} className="relative ml-6 hidden w-full max-w-md md:block">
+        <form onSubmit={onSubmit} className="relative ml-6 hidden w-full max-w-lg md:block">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search books, authors, topics…"
-            className="rounded-full pl-10 pr-24"
+            placeholder="Search books, guides, topics..."
+            className="rounded-full border bg-card pl-10 pr-24"
           />
           <button
             type="submit"
@@ -46,12 +44,18 @@ export function SiteHeader() {
             Search
           </button>
         </form>
-        <nav className="ml-auto flex items-center gap-5 text-sm">
-          <a href="/#store" className="text-muted-foreground transition hover:text-foreground">
+        <nav className="ml-auto flex items-center gap-2">
+          <a
+            href="/#store"
+            className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:bg-secondary"
+          >
             Store
           </a>
-          <Link to="/admin" className="text-muted-foreground transition hover:text-foreground">
-            Admin
+          <Link
+            to="/admin"
+            className="hidden items-center gap-2 rounded-xl border bg-card px-4 py-2 text-sm font-semibold shadow-card transition hover:bg-secondary sm:flex"
+          >
+            <UserRound className="h-4 w-4" /> Admin
           </Link>
         </nav>
       </div>
@@ -63,7 +67,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-24 bg-ink text-ink-foreground">
       <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-10 text-sm sm:flex-row sm:justify-between">
-        <span className="font-display text-lg">mavlonebook</span>
+        <span className="font-display text-lg font-bold">mavlonebook</span>
         <span className="opacity-60">© {new Date().getFullYear()} mavlonebook. All rights reserved.</span>
       </div>
     </footer>
