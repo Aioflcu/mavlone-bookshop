@@ -38,6 +38,12 @@ const FORMAT_LABELS: Record<string, string> = {
   audiobook: "Audiobooks",
 };
 
+const FORMAT_SHELVES: Record<string, { title: string; subtitle: string }> = {
+  ebook: { title: "Explore Ebooks", subtitle: "Instant-download picks for every reader." },
+  paperback: { title: "Explore Print Books", subtitle: "Popular print books for focused offline reading." },
+  audiobook: { title: "Latest Audiobooks", subtitle: "Listen and grow anywhere." },
+};
+
 function BookCard({
   book,
   buyHref,
@@ -49,7 +55,7 @@ function BookCard({
 }) {
   return (
     <div
-      className={`group relative flex flex-col rounded-2xl border bg-background p-3 transition duration-300 hover:-translate-y-1 hover:shadow-card ${className}`}
+      className={`group relative flex flex-col rounded-2xl border bg-card p-3 transition duration-300 hover:-translate-y-1 hover:shadow-lift ${className}`}
     >
       <Link
         to="/book/$id"
@@ -59,12 +65,12 @@ function BookCard({
       />
       <div className="pointer-events-none">
         <BookCover book={book} />
-        <p className="mt-3 truncate text-sm font-semibold">{book.title}</p>
+        <p className="mt-3 truncate text-sm font-bold">{book.title}</p>
         <Stars rating={book.rating} count={book.rating_count} className="mt-1" />
       </div>
       <div className="relative z-20 mt-auto flex items-center justify-between pt-2">
         <p className="pointer-events-none text-sm">
-          <span className="font-bold">{formatPrice(book.price)}</span>
+          <span className="font-extrabold">{formatPrice(book.price)}</span>
           {book.old_price && (
             <span className="ml-1.5 text-xs text-muted-foreground line-through">
               {formatPrice(book.old_price)}
@@ -77,7 +83,7 @@ function BookCard({
             target="_blank"
             rel="noreferrer"
             aria-label={`Buy ${book.title}`}
-            className="rounded-lg border bg-card p-2 text-muted-foreground transition hover:bg-primary hover:text-primary-foreground"
+            className="rounded-full border bg-card p-2.5 transition hover:bg-primary hover:text-primary-foreground"
           >
             <ShoppingBag className="h-4 w-4" />
           </a>
@@ -113,14 +119,14 @@ function CarouselShelf({
           <button
             aria-label={`Scroll back — ${title}`}
             onClick={() => scroll(-1)}
-            className="rounded-full border bg-background p-2 transition hover:bg-secondary"
+            className="rounded-full border bg-card p-2 transition hover:bg-secondary"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             aria-label={`Scroll forward — ${title}`}
             onClick={() => scroll(1)}
-            className="rounded-full border bg-background p-2 transition hover:bg-secondary"
+            className="rounded-full border bg-card p-2 transition hover:bg-secondary"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -151,7 +157,7 @@ function CoverFan({ books, fallbackImage }: { books: Book[]; fallbackImage: stri
   }
   const n = covers.length;
   return (
-    <div className="relative mx-auto hidden h-[330px] w-full max-w-lg lg:block">
+    <div className="relative mx-auto hidden h-[340px] w-full max-w-xl lg:block">
       {covers.map((b, i) => {
         const offset = i - (n - 1) / 2;
         return (
@@ -159,9 +165,9 @@ function CoverFan({ books, fallbackImage }: { books: Book[]; fallbackImage: stri
             key={b.id}
             className="absolute left-1/2 top-1/2 w-44"
             style={{
-              transform: `translate(-50%, -50%) translateX(${offset * 58}px) translateY(${
-                Math.abs(offset) * 8
-              }px) rotate(${offset * 7}deg)`,
+              transform: `translate(-50%, -50%) translateX(${offset * 80}px) translateY(${
+                Math.abs(offset) * 10
+              }px) rotate(${offset * 6}deg)`,
               zIndex: 30 - Math.abs(offset) * 10,
             }}
           >
@@ -194,7 +200,6 @@ function Index() {
     [books],
   );
   const newReleases = useMemo(() => books.slice(0, 10), [books]);
-  const featured = useMemo(() => books.filter((b) => b.featured).slice(0, 10), [books]);
   const favorites = useMemo(
     () =>
       [...books]
@@ -223,10 +228,10 @@ function Index() {
           <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-blob opacity-70" />
           <div className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
             <div>
-              <span className="inline-flex rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em]">
+              <span className="inline-flex rounded-full bg-secondary px-4 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-primary">
                 The mavlonebook bookstore
               </span>
-              <h1 className="mt-5 max-w-xl font-display text-4xl font-semibold leading-[1.05] sm:text-6xl">
+              <h1 className="mt-5 max-w-xl font-display text-4xl font-extrabold leading-[1.08] sm:text-5xl">
                 {settings?.hero_title ?? "Books that stay with you."}
               </h1>
               <p className="mt-5 max-w-md text-base text-muted-foreground sm:text-lg">
@@ -235,9 +240,9 @@ function Index() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
                   href="#store"
-                  className="rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                  className="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
                 >
-                  Explore books
+                  Explore Books
                 </a>
                 {hasAudiobooks && (
                   <button
@@ -247,7 +252,7 @@ function Index() {
                         .getElementById("store")
                         ?.scrollIntoView({ behavior: "smooth", block: "start" });
                     }}
-                    className="rounded-full border bg-background px-7 py-3 text-sm font-semibold transition hover:bg-secondary"
+                    className="rounded-xl border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-secondary"
                   >
                     Audiobooks
                   </button>
@@ -268,24 +273,27 @@ function Index() {
                 Instant-download ebooks and reader favorites from the mavlonebook store.
               </p>
             </div>
-            <a href="#store" className="text-sm font-semibold text-primary hover:underline">
-              Explore our bookstore →
+            <a href="#store" className="text-sm font-semibold hover:underline">
+              Explore Our Bookstore
             </a>
           </div>
           <CarouselShelf
-            title="New releases"
-            subtitle="Fresh picks readers buy first."
+            title="New Releases"
+            subtitle="Fast-start digital picks readers buy first."
             books={newReleases}
             settings={settings}
           />
+          {formats.map((f) => (
+            <CarouselShelf
+              key={f}
+              title={FORMAT_SHELVES[f]?.title ?? FORMAT_LABELS[f]}
+              subtitle={FORMAT_SHELVES[f]?.subtitle ?? ""}
+              books={books.filter((b) => b.format === f).slice(0, 10)}
+              settings={settings}
+            />
+          ))}
           <CarouselShelf
-            title="Staff picks"
-            subtitle="Hand-selected by the mavlonebook team."
-            books={featured}
-            settings={settings}
-          />
-          <CarouselShelf
-            title="Reader favorites"
+            title="Reader Favorites"
             subtitle="The highest-rated titles on the store."
             books={favorites}
             settings={settings}
@@ -302,7 +310,7 @@ function Index() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search title or author"
-              className="rounded-full pl-10"
+              className="rounded-full border bg-card pl-10"
             />
           </div>
         </div>
@@ -311,7 +319,7 @@ function Index() {
           <div className="mt-6 flex flex-wrap gap-2">
             <button
               onClick={() => setFmt("all")}
-              className={`rounded-full border px-4 py-1.5 text-sm transition ${
+              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                 fmt === "all"
                   ? "border-primary bg-primary text-primary-foreground"
                   : "bg-card hover:bg-secondary"
@@ -323,7 +331,7 @@ function Index() {
               <button
                 key={f}
                 onClick={() => setFmt(f)}
-                className={`rounded-full border px-4 py-1.5 text-sm transition ${
+                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                   fmt === f
                     ? "border-primary bg-primary text-primary-foreground"
                     : "bg-card hover:bg-secondary"
@@ -340,7 +348,7 @@ function Index() {
             <button
               key={c}
               onClick={() => setCat(c)}
-              className={`shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${
+              className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                 cat === c
                   ? "border-primary bg-primary text-primary-foreground"
                   : "bg-card hover:bg-secondary"

@@ -21,7 +21,10 @@ export function Stars({
           />
         ))}
       </span>
-      {count != null && count > 0 && <span className="text-xs text-muted-foreground">({count})</span>}
+      <span className="text-xs font-medium text-muted-foreground">
+        {rating.toFixed(1)}
+        {count != null && count > 0 ? ` (${count})` : ""}
+      </span>
     </span>
   );
 }
