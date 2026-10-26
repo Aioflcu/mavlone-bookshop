@@ -286,7 +286,7 @@ function Index() {
           {formats.map((f) => (
             <CarouselShelf
               key={f}
-              title={FORMAT_SHELVES[f]?.title ?? FORMAT_LABELS[f]}
+              title={FORMAT_SHELVES[f]?.title ?? FORMAT_LABELS[f] ?? ""}
               subtitle={FORMAT_SHELVES[f]?.subtitle ?? ""}
               books={books.filter((b) => b.format === f).slice(0, 10)}
               settings={settings}
