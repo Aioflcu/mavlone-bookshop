@@ -1,11 +1,13 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { BookOpen, Search, UserRound } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BookOpen, Search, ShoppingBag, UserRound } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
+import { readCart } from "@/lib/checkout";
 
 export function SiteHeader() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const cartCount = readCart().reduce((sum, item) => sum + item.quantity, 0);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -26,9 +28,10 @@ export function SiteHeader() {
           </span>
           <span className="hidden flex-col leading-tight sm:flex">
             <span className="font-display text-lg font-extrabold">mavlonebook</span>
-            <span className="text-[10px] font-medium text-muted-foreground">Premium Books &amp; Guides</span>
+            <span className="text-[10px] font-medium text-muted-foreground">Books &amp; Guides</span>
           </span>
         </Link>
+
         <form onSubmit={onSubmit} className="relative ml-6 hidden w-full max-w-lg md:block">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -44,19 +47,23 @@ export function SiteHeader() {
             Search
           </button>
         </form>
-        <nav className="ml-auto flex items-center gap-2">
-          <a
-            href="/#store"
-            className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:bg-secondary"
-          >
-            Store
-          </a>
-          <Link
-            to="/admin"
-            className="hidden items-center gap-2 rounded-xl border bg-card px-4 py-2 text-sm font-semibold shadow-card transition hover:bg-secondary sm:flex"
-          >
-            <UserRound className="h-4 w-4" /> Admin
+
+        <nav className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <Link to="/" className="rounded-xl px-3 py-2 text-sm font-semibold transition hover:bg-secondary">Store</Link>
+          <Link to="/about" className="rounded-xl px-3 py-2 text-sm font-semibold transition hover:bg-secondary">About</Link>
+          <Link to="/shop" className="rounded-xl px-3 py-2 text-sm font-semibold transition hover:bg-secondary">Shop</Link>
+          <Link to="/contact" className="rounded-xl px-3 py-2 text-sm font-semibold transition hover:bg-secondary">Contact</Link>
+          <Link to="/pricing" className="rounded-xl px-3 py-2 text-sm font-semibold transition hover:bg-secondary">Pricing</Link>
+          <Link to="/cart" className="relative inline-flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-sm font-semibold transition hover:bg-secondary">
+            <ShoppingBag className="h-4 w-4" />
+            Cart
+            {cartCount > 0 && <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">{cartCount}</span>}
           </Link>
+          <Link to="/signin" className="inline-flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-sm font-semibold transition hover:bg-secondary">
+            <UserRound className="h-4 w-4" /> Sign in
+          </Link>
+          <Link to="/signup" className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Sign up</Link>
+          <Link to="/admin" className="hidden items-center gap-2 rounded-xl border bg-card px-3 py-2 text-sm font-semibold shadow-card transition hover:bg-secondary sm:flex">Admin</Link>
         </nav>
       </div>
     </header>
@@ -66,8 +73,17 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mt-24 bg-ink text-ink-foreground">
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-10 text-sm sm:flex-row sm:justify-between">
-        <span className="font-display text-lg font-bold">mavlonebook</span>
+      <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-10 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <span className="font-display text-lg font-bold">mavlonebook</span>
+          <p className="mt-1 opacity-70">Books for learning, growth, and everyday reading.</p>
+        </div>
+        <div className="flex flex-wrap gap-4 opacity-80">
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+        </div>
         <span className="opacity-60">© {new Date().getFullYear()} mavlonebook. All rights reserved.</span>
       </div>
     </footer>

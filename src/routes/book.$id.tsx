@@ -1,31 +1,62 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
-import { bookQuery, settingsQuery, formatPrice, buyHrefFor } from "@/lib/books";
-import { BookCover } from "@/components/BookCover";
-import { Stars } from "@/components/Stars";
-import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
+import { useNavigate } from "@tanstack/react-router";
+import { ShoppingBag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { addToCart, type CartItem, formatCurrency } from "@/lib/checkout";
 
 export const Route = createFileRoute("/book/$id")({
   head: () => ({
     meta: [
       { title: "Book details — mavlonebook" },
       { name: "description", content: "Read about this book and buy it from mavlonebook." },
-      { property: "og:title", content: "Book details — mavlonebook" },
-      { property: "og:description", content: "Read about this book and buy it from mavlonebook." },
-      { property: "og:type", content: "book" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: BookPage,
 });
 
 function BookPage() {
+  const navigate = useNavigate();
   const { id } = Route.useParams();
   const { data: book, isLoading } = useQuery(bookQuery(id));
   const { data: settings } = useQuery(settingsQuery);
+  const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (!added) return;
+    const timer = setTimeout(() => setAdded(false), 1800);
+    return () => clearTimeout(timer);
+  }, [added]);
 
   const buyHref = book ? buyHrefFor(book, settings) : undefined;
+
+  const handleAddToCart = () => {
+    if (!book) return;
+    addToCart({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      price: Number(book.price || 0),
+      cover_url: book.cover_url,
+      format: book.format,
+      type: book.format === "paperback" ? "print" : book.format,
+    });
+    setAdded(true);
+  };
+
+  const handleBuyNow = () => {
+    if (!book) return;
+    addToCart({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      price: Number(book.price || 0),
+      cover_url: book.cover_url,
+      format: book.format,
+      type: book.format === "paperback" ? "print" : book.format,
+    });
+    navigate({ to: "/checkout" });
+  };
 
   return (
     <div className="min-h-screen">
@@ -56,18 +87,20 @@ function BookPage() {
                   </span>
                 )}
               </p>
-              {buyHref ? (
-                <a
-                  href={buyHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-6 inline-flex rounded-full bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-                >
-                  Buy now
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button onClick={handleBuyNow}>Buy now</Button>
+                <Button variant="outline" onClick={handleAddToCart}>
+                  {added ? "Added to cart" : "Add to cart"}
+                </Button>
+              </div>
+
+              {buyHref && (
+                <a href={buyHref} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-sm text-primary hover:underline">
+                  Or buy via external provider
                 </a>
-              ) : (
-                <p className="mt-6 text-sm text-muted-foreground">Purchasing opens soon.</p>
               )}
+
               {book.pages && <p className="mt-6 text-sm text-muted-foreground">{book.pages} pages</p>}
               <p className="mt-6 whitespace-pre-line leading-relaxed">{book.description}</p>
             </div>
