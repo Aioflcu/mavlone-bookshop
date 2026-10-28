@@ -1,22 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useNavigate } from "@tanstack/react-router";
-import { ShoppingBag } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { addToCart, type CartItem, formatCurrency } from "@/lib/checkout";
+import { BookCover } from "@/components/BookCover";
+import { Stars } from "@/components/Stars";
+import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
+import { addToCart } from "@/lib/checkout";
+import { bookQuery, settingsQuery, formatPrice, buyHrefFor } from "@/lib/books";
 
 export const Route = createFileRoute("/book/$id")({
   head: () => ({
     meta: [
       { title: "Book details — mavlonebook" },
       { name: "description", content: "Read about this book and buy it from mavlonebook." },
+      { property: "og:title", content: "Book details — mavlonebook" },
+      { property: "og:description", content: "Read about this book and buy it from mavlonebook." },
+      { property: "og:type", content: "book" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: BookPage,
 });
 
 function BookPage() {
-  const navigate = useNavigate();
   const { id } = Route.useParams();
   const { data: book, isLoading } = useQuery(bookQuery(id));
   const { data: settings } = useQuery(settingsQuery);
@@ -42,20 +49,6 @@ function BookPage() {
       type: book.format === "paperback" ? "print" : book.format,
     });
     setAdded(true);
-  };
-
-  const handleBuyNow = () => {
-    if (!book) return;
-    addToCart({
-      id: book.id,
-      title: book.title,
-      author: book.author,
-      price: Number(book.price || 0),
-      cover_url: book.cover_url,
-      format: book.format,
-      type: book.format === "paperback" ? "print" : book.format,
-    });
-    navigate({ to: "/checkout" });
   };
 
   return (
@@ -89,7 +82,9 @@ function BookPage() {
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button onClick={handleBuyNow}>Buy now</Button>
+                <Button asChild>
+                  <Link to="/checkout">Buy now</Link>
+                </Button>
                 <Button variant="outline" onClick={handleAddToCart}>
                   {added ? "Added to cart" : "Add to cart"}
                 </Button>

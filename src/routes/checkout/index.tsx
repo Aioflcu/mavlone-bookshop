@@ -1,5 +1,4 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, CreditCard, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import {
   type CartItem,
   type CheckoutGateway,
 } from "@/lib/checkout";
+import { createOrder } from "@/lib/order-service";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -42,12 +42,10 @@ function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [form, setForm] = useState(initialForm);
   const [paymentMethod, setPaymentMethod] = useState<CheckoutGateway>("stripe");
-  const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const storedCart = readCart();
-    setItems(storedCart);
+    setItems(readCart());
   }, []);
 
   const totals = useMemo(() => getCartTotals(items), [items]);
@@ -62,12 +60,10 @@ function CheckoutPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
     if (!items.length) {
       toast.error("Your cart is empty.");
       return;
     }
-
     if (!form.fullName || !form.email || !form.address || !form.city || !form.country) {
       toast.error("Please fill in all required shipping details.");
       return;
@@ -76,6 +72,36 @@ function CheckoutPage() {
     setBusy(true);
 
     try {
+      const result = await createOrder({
+        customerName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        country: form.country,
+        notes: form.notes,
+        items: items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          format: item.format,
+          cover_url: item.cover_url,
+          type: item.type || item.format,
+        })),
+        subtotal: totals.subtotal,
+        shipping: totals.shipping,
+        total: totals.total,
+        paymentMethod,
+        orderSource: "website",
+      });
+
+      if (result?.localOnly) {
+        clearCart();
+        navigate({ to: "/checkout/success", search: { status: "pending" } });
+        return;
+      }
+
       const gatewayUrl = buildGatewayRedirect(paymentMethod, {
         amount: totals.total,
         email: form.email,
@@ -84,14 +110,15 @@ function CheckoutPage() {
       });
 
       if (gatewayUrl) {
+        clearCart();
         window.location.assign(gatewayUrl);
         return;
       }
 
-      setConfirmed(true);
       clearCart();
       navigate({ to: "/checkout/success", search: { status: "pending" } });
     } catch (error) {
+      console.error(error);
       toast.error(error instanceof Error ? error.message : "Unable to complete checkout.");
     } finally {
       setBusy(false);
@@ -102,12 +129,11 @@ function CheckoutPage() {
     <div className="mx-auto max-w-6xl px-5 py-12">
       <div className="mb-8 flex items-center gap-3">
         <Link to="/cart" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to cart
+          <span aria-hidden="true">←</span> Back to cart
         </Link>
       </div>
 
       <div className="mb-8 flex items-center gap-3 text-primary">
-        <ShieldCheck className="h-5 w-5" />
         <span className="text-sm font-semibold uppercase tracking-[0.2em]">Secure checkout</span>
       </div>
 
@@ -175,9 +201,6 @@ function CheckoutPage() {
                   />
                 </label>
               ))}
-              <div className="rounded-xl border border-dashed bg-secondary/50 p-4 text-sm text-muted-foreground">
-                For live transactions, connect your Stripe, Flutterwave, or Paystack payment link in the environment variables and update your public URLs.
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -205,22 +228,12 @@ function CheckoutPage() {
             ))}
 
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatCurrency(totals.subtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Shipping</span>
-                <span>{formatCurrency(totals.shipping)}</span>
-              </div>
-              <div className="flex justify-between border-t pt-3 text-base font-bold">
-                <span>Total</span>
-                <span>{formatCurrency(totals.total)}</span>
-              </div>
+              <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(totals.subtotal)}</span></div>
+              <div className="flex justify-between"><span>Shipping</span><span>{formatCurrency(totals.shipping)}</span></div>
+              <div className="flex justify-between border-t pt-3 text-base font-bold"><span>Total</span><span>{formatCurrency(totals.total)}</span></div>
             </div>
 
             <Button type="submit" className="w-full" disabled={busy || items.length === 0}>
-              <CreditCard className="mr-2 h-4 w-4" />
               {busy ? "Processing…" : "Place order"}
             </Button>
           </CardContent>
